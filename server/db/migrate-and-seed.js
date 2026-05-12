@@ -54,7 +54,7 @@ async function seed() {
       phoneNumber: '+919876543211',
       role: 'RESIDENT',
       fullName: 'Arjun Sharma',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/32.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1615813967515-e1838c1c56dd?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       flatNumber: 'B-201',
@@ -63,7 +63,7 @@ async function seed() {
       phoneNumber: '+919800011111',
       role: 'RESIDENT',
       fullName: 'Priya Menon',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/52.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1589419107936-ce47e923e512?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       flatNumber: 'A-105',
@@ -72,7 +72,7 @@ async function seed() {
       phoneNumber: '+919800022222',
       role: 'RESIDENT',
       fullName: 'Vikram Patel',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/36.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1555519822-4416972412b9?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       flatNumber: 'C-304',
@@ -81,7 +81,7 @@ async function seed() {
       phoneNumber: '+919800033333',
       role: 'RESIDENT',
       fullName: 'Ananya Krishnan',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1506894008272-38d17b409dd6?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       flatNumber: 'D-402',
@@ -92,7 +92,7 @@ async function seed() {
       phoneNumber: '+919876543212',
       role: 'GUARD',
       fullName: 'Ramesh Singh',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/44.jpg',
+      profilePhotoUrl: 'https://raw.githubusercontent.com/UdayPS-4o/safenest/main/server/public/avatars/indian_security_man_1778573569801.png',
       societyId,
       accountStatus: 'APPROVED',
     },
@@ -100,7 +100,7 @@ async function seed() {
       phoneNumber: '+919800044444',
       role: 'GUARD',
       fullName: 'Suresh Yadav',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/76.jpg',
+      profilePhotoUrl: 'https://raw.githubusercontent.com/UdayPS-4o/safenest/main/server/public/avatars/indian_cleaner_man_1778573531719.png',
       societyId,
       accountStatus: 'APPROVED',
     },
@@ -110,7 +110,7 @@ async function seed() {
       phoneNumber: '+919876543213',
       role: 'HELPER',
       fullName: 'Meena Kumari',          // renamed from Sunita Devi
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/57.jpg',
+      profilePhotoUrl: 'https://raw.githubusercontent.com/UdayPS-4o/safenest/main/server/public/avatars/indian_cook_woman_1778573490759.png',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8921',
@@ -120,7 +120,7 @@ async function seed() {
       phoneNumber: '+919800055551',
       role: 'HELPER',
       fullName: 'Kavita Sharma',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
+      profilePhotoUrl: 'https://raw.githubusercontent.com/UdayPS-4o/safenest/main/server/public/avatars/indian_sweeper_woman_1778573512150.png',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8922',
@@ -130,7 +130,7 @@ async function seed() {
       phoneNumber: '+919876543210',
       role: 'HELPER',
       fullName: 'Ramesh Kumar',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/55.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1533069152285-d8b52f1eec36?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8923',
@@ -140,7 +140,7 @@ async function seed() {
       phoneNumber: '+919800055552',
       role: 'HELPER',
       fullName: 'Lakshmi Bai',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/63.jpg',
+      profilePhotoUrl: 'https://raw.githubusercontent.com/UdayPS-4o/safenest/main/server/public/avatars/indian_security_woman_1778573549659.png',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8924',
@@ -150,7 +150,7 @@ async function seed() {
       phoneNumber: '+919800055553',
       role: 'HELPER',
       fullName: 'Mohan Das',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/47.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1516008628005-cb9bb3db7b0a?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8925',
@@ -160,7 +160,7 @@ async function seed() {
       phoneNumber: '+919800055554',
       role: 'HELPER',
       fullName: 'Geeta Devi',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/72.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1517409241517-f5da1daff4f4?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8926',
@@ -170,7 +170,7 @@ async function seed() {
       phoneNumber: '+919800055555',
       role: 'HELPER',
       fullName: 'Rajesh Patel',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/62.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1502409029705-ebcf858d4076?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8927',
@@ -180,7 +180,7 @@ async function seed() {
       phoneNumber: '+919800055556',
       role: 'HELPER',
       fullName: 'Anita Singh',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/29.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1615179538356-94676101962d?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8928',
@@ -192,7 +192,7 @@ async function seed() {
       phoneNumber: '+919876543214',
       role: 'ADMIN',
       fullName: 'Rajan Mehta',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/90.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1520630650953-294b30e42d7f?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
     },
@@ -202,7 +202,7 @@ async function seed() {
       phoneNumber: '+919876543215',
       role: 'DELIVERY',
       fullName: 'Rahul Kumar',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/22.jpg',
+      profilePhotoUrl: 'https://images.unsplash.com/photo-1550927877-c91f63dcad1a?w=400&q=80',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'SWG-4829301',
@@ -232,7 +232,13 @@ async function seed() {
       await db.insert(users).values(u);
       console.log(`✅ Created: ${u.fullName} (${u.role}) → ${u.phoneNumber}`);
     } else {
-      console.log(`⏭️  Already exists: ${u.fullName}`);
+      // Restore realistic photos if they were lost
+      if (u.profilePhotoUrl) {
+        await db.update(users).set({ profilePhotoUrl: u.profilePhotoUrl }).where(eq(users.id, existing.id));
+        console.log(`⏭️  Already exists (updated photo): ${u.fullName}`);
+      } else {
+        console.log(`⏭️  Already exists: ${u.fullName}`);
+      }
     }
   }
 
