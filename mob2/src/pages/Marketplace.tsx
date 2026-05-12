@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Tag, Home, Gift, X, Phone, MapPin, Clock, Trash2, CheckCircle, ChevronDown, RefreshCw } from 'lucide-react';
+import { Plus, Search, X, Phone, MapPin, Clock, Trash2, CheckCircle, RefreshCw } from 'lucide-react';
 import { ApiService } from '../services/api';
 
 type ListingType = 'ALL' | 'SELL' | 'RENT' | 'FREE';
@@ -70,7 +70,7 @@ const Marketplace: React.FC<{ user: any }> = ({ user }) => {
     finally { setCreating(false); }
   };
 
-  const handleStatusChange = async (id: number, status: 'SOLD' | 'RENTED' | 'CLOSED') => {
+  const handleStatusChange = async (id: number, status: 'ACTIVE' | 'SOLD' | 'RENTED' | 'CLOSED') => {
     await ApiService.updateListingStatus(id, status);
     setSelectedListing(null);
     fetchListings();
@@ -284,7 +284,7 @@ const Marketplace: React.FC<{ user: any }> = ({ user }) => {
                         <CheckCircle size={16} /> Mark Rented
                       </button>
                     )}
-                    {selectedListing.status !== 'ACTIVE' && (
+                  {selectedListing.status !== 'ACTIVE' && (
                       <button onClick={() => handleStatusChange(selectedListing.id, 'ACTIVE')} style={{ flex: 1, padding: '12px', borderRadius: 12, border: 'none', background: 'var(--surface-3)', color: 'var(--text-primary)', fontWeight: 800, cursor: 'pointer' }}>
                         Re-Activate
                       </button>
