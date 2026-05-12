@@ -7,7 +7,8 @@ const {
   mysqlEnum, 
   boolean,
   int,
-  date
+  date,
+  decimal
 } = require('drizzle-orm/mysql-core');
 
 const societies = mysqlTable('societies', {
@@ -79,11 +80,30 @@ const incidentsAndAlerts = mysqlTable('incidents_and_alerts', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+const marketplaceListings = mysqlTable('marketplace_listings', {
+  id: int('id').autoincrement().primaryKey(),
+  sellerId: int('seller_id').references(() => users.id).notNull(),
+  societyId: int('society_id').references(() => societies.id).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: text('description'),
+  type: mysqlEnum('type', ['SELL', 'RENT', 'FREE']).notNull(),
+  price: int('price'), // in rupees, null for FREE
+  rentPeriod: varchar('rent_period', { length: 50 }), // 'per day', 'per week', 'per month'
+  category: varchar('category', { length: 100 }),
+  imageUrl: text('image_url'),
+  sellerFlat: varchar('seller_flat', { length: 50 }),
+  sellerName: varchar('seller_name', { length: 255 }),
+  sellerPhone: varchar('seller_phone', { length: 20 }),
+  status: mysqlEnum('status', ['ACTIVE', 'SOLD', 'RENTED', 'CLOSED']).notNull().default('ACTIVE'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 module.exports = { 
   societies, 
   users, 
   workHistory, 
   visitorLogs, 
   preApprovals, 
-  incidentsAndAlerts 
+  incidentsAndAlerts,
+  marketplaceListings,
 };

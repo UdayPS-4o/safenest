@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Search, Users, LogOut, BarChart2, UserPlus, CreditCard, QrCode, ClipboardList, Wrench, Package } from 'lucide-react';
+import { Home, Search, Users, LogOut, BarChart2, UserPlus, CreditCard, QrCode, ClipboardList, Wrench, Package, ShoppingBag } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ResidentHome from './ResidentHome';
 import HelpersList from './HelpersList';
@@ -11,6 +11,7 @@ import UserManagement from './UserManagement';
 import CardManagement from './CardManagement';
 import HelperHome from './HelperHome';
 import DeliveryHome from './DeliveryHome';
+import Marketplace from './Marketplace';
 
 const Shell: React.FC = () => {
   const { user, logout } = useAuth();
@@ -22,14 +23,14 @@ const Shell: React.FC = () => {
       case 'GUARD':
         return [<GuardHome user={user} />, <GuardLog user={user} />];
       case 'ADMIN':
-        return [<AdminOverview user={user} />, <UserManagement user={user} />, <CardManagement user={user} />];
+        return [<AdminOverview user={user} />, <UserManagement user={user} />, <CardManagement user={user} />, <Marketplace user={user} />];
       case 'HELPER':
         return [<HelperHome user={user} />];
       case 'DELIVERY':
         return [<DeliveryHome user={user} />];
       case 'RESIDENT':
       default:
-        return [<ResidentHome user={user} />, <HelpersList user={user} />, <Household user={user} />];
+        return [<ResidentHome user={user} />, <HelpersList user={user} />, <Marketplace user={user} />, <Household user={user} />];
     }
   };
 
@@ -45,6 +46,7 @@ const Shell: React.FC = () => {
           { icon: BarChart2, label: 'Overview' },
           { icon: UserPlus, label: 'Users' },
           { icon: CreditCard, label: 'Cards' },
+          { icon: ShoppingBag, label: 'Market' },
         ];
       case 'HELPER':
         return [
@@ -58,6 +60,7 @@ const Shell: React.FC = () => {
         return [
           { icon: Home, label: 'Home' },
           { icon: Search, label: 'Helpers' },
+          { icon: ShoppingBag, label: 'Market' },
           { icon: Users, label: 'Household' },
         ];
     }

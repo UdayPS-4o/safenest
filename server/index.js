@@ -8,6 +8,7 @@ const visitorRoutes = require('./routes/visitors');
 const adminRoutes = require('./routes/admin');
 const alertRoutes = require('./routes/alerts');
 const deliveryRoutes = require('./routes/delivery');
+const marketplaceRoutes = require('./routes/marketplace');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,6 +24,7 @@ app.use('/api/visitors', visitorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/delivery', deliveryRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 
 // ── Health Check ───────────────────────────────────────────
 app.get('/api/health', (req, res) => {

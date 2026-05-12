@@ -84,6 +84,24 @@ export const ApiService = {
 
   // Delivery Partner (Guard scans)
   scanDeliveryQr: (qrValue: string) => api.post('/api/delivery/scan', { qrValue }),
+
+  // Marketplace
+  getListings: (params?: { type?: string; category?: string; search?: string }) =>
+    api.get('/api/marketplace', { params }),
+  getMyListings: () => api.get('/api/marketplace/my'),
+  getListing: (id: number) => api.get(`/api/marketplace/${id}`),
+  createListing: (data: {
+    title: string;
+    description?: string;
+    type: 'SELL' | 'RENT' | 'FREE';
+    price?: number;
+    rentPeriod?: string;
+    category?: string;
+    imageUrl?: string;
+  }) => api.post('/api/marketplace', data),
+  updateListingStatus: (id: number, status: 'ACTIVE' | 'SOLD' | 'RENTED' | 'CLOSED') =>
+    api.patch(`/api/marketplace/${id}/status`, { status }),
+  deleteListing: (id: number) => api.delete(`/api/marketplace/${id}`),
 };
 
 export default api;
