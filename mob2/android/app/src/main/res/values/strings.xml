@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Safenest</string>
+    <string name="title_activity_main">Safenest</string>
+    <string name="package_name">com.safenest.mobile</string>
+    <string name="custom_url_scheme">com.safenest.mobile</string>
+</resources>

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const { db } = require('../db');
-const { users } = require('../db/schema');
+const { users } = require('../db').schema;
 const { eq } = require('drizzle-orm');
 
 // In-memory OTP store (swap for Redis in production)
@@ -67,63 +67,19 @@ router.post('/verify-otp', async (req, res) => {
     const SECRET_KEY = process.env.JWT_SECRET || 'your_super_secret_key_123';
 
     // Check if user exists in DB
-    let existingUsers = [];
-    try {
-      existingUsers = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).limit(1);
-    } catch (dbErr) {
-      console.warn('[DB] Could not reach database, using mock user:', dbErr.message);
-    }
-
+    const existingUsers = db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).all();
     let user = existingUsers[0];
 
     if (!user) {
       // New user — create as GUEST pending admin approval
-      // If DB unavailable, generate mock user so the app still boots
-      try {
-        const [insertResult] = await db.insert(users).values({
-          phoneNumber,
-          role: 'RESIDENT',
-          accountStatus: 'APPROVED',
-        });
-        const newUserRows = await db.select().from(users).where(eq(users.id, insertResult.insertId)).limit(1);
-        user = newUserRows[0];
-      } catch (insertErr) {
-        console.warn('[DB] Insert failed, using mock user:', insertErr.message);
-        // Mock user for DB-offline development
-        let role = 'RESIDENT';
-        let fullName = 'Arjun Sharma';
-        let profilePhotoUrl = 'https://randomuser.me/api/portraits/men/32.jpg';
-        let flatNumber = 'B-201';
-
-        if (phoneNumber.endsWith('2')) {
-          role = 'GUARD';
-          fullName = 'Ramesh Singh';
-          profilePhotoUrl = 'https://randomuser.me/api/portraits/men/44.jpg';
-          flatNumber = null;
-        } else if (phoneNumber.endsWith('3')) {
-          role = 'HELPER';
-          fullName = 'Meera Joshi';
-          profilePhotoUrl = 'https://randomuser.me/api/portraits/women/44.jpg';
-          flatNumber = null;
-        } else if (phoneNumber.endsWith('4')) {
-          role = 'ADMIN';
-          fullName = 'Society Admin';
-          profilePhotoUrl = 'https://randomuser.me/api/portraits/men/90.jpg';
-          flatNumber = null;
-        }
-
-        user = {
-          id: parseInt(phoneNumber.slice(-1)) || 1,
-          phoneNumber,
-          role,
-          fullName,
-          profilePhotoUrl,
-          societyId: 1,
-          flatNumber,
-          accountStatus: 'APPROVED',
-          qrCardId: role === 'HELPER' ? 'CARD-1122' : null
-        };
-      }
+      const info = db.insert(users).values({
+        phoneNumber,
+        role: 'GUEST',
+        accountStatus: 'PENDING',
+      }).run();
+      
+      const newUserRows = db.select().from(users).where(eq(users.id, info.lastInsertRowid)).all();
+      user = newUserRows[0];
     }
 
     if (user.accountStatus === 'BANNED') {

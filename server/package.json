@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "node index.js",
+    "migrate": "npx drizzle-kit push",
+    "seed": "node db/migrate-and-seed.js",
+    "db:setup": "node db/migrate-and-seed.js",
+    "db:seed-only": "node db/migrate-and-seed.js --seed"
   },
   "keywords": [],
   "author": "",
@@ -12,13 +17,14 @@
   "type": "commonjs",
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
     "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.22.2",
+    "mysql2": "^3.22.3",
     "uuid": "^14.0.0"
   },
   "devDependencies": {

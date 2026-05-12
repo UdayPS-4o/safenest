@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { db } = require('../db');
-const { incidentsAndAlerts, users } = require('../db/schema');
+const { incidentsAndAlerts, users } = require('../db').schema;
 const { eq } = require('drizzle-orm');
 const { authMiddleware } = require('../middleware/auth');
 
@@ -25,18 +25,14 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    try {
-      await db.insert(incidentsAndAlerts).values({
-        reportedById: req.user.id,
-        societyId: req.user.societyId,
-        targetUserId: targetUserId || null,
-        description,
-        severity,
-        status: 'OPEN',
-      });
-    } catch (dbErr) {
-      console.warn('[Alert] DB insert failed:', dbErr.message);
-    }
+    db.insert(incidentsAndAlerts).values({
+      reportedById: req.user.id,
+      societyId: req.user.societyId,
+      targetUserId: targetUserId || null,
+      description,
+      severity,
+      status: 'OPEN',
+    }).run();
 
     // If SOS, broadcast to all guards (placeholder — integrate socket.io or FCM here)
     if (severity === 'SOS') {

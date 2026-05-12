@@ -1,25 +1,25 @@
-require('dotenv').config();
-const { drizzle } = require('drizzle-orm/mysql2');
-const mysql = require('mysql2/promise');
-const schema = require('./schema');
+require('dotenv').config({ path: require('path').resolve(__dirname, '../.env') });
+const path = require('path');
 
-// Create pool lazily — don't throw at startup if DB is unreachable
+// Always MySQL now — Cloud Run production
+const mysql = require('mysql2/promise');
+const { drizzle } = require('drizzle-orm/mysql2');
+const schema = require('./schema.mysql');
+
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   waitForConnections: true,
-  connectionLimit: 5,
-  connectTimeout: 10000,
-  ssl: { rejectUnauthorized: false },
-});
-
-// Log connection errors without crashing
-pool.on('error', (err) => {
-  console.warn('[DB Pool Error]', err.message);
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
 const db = drizzle(pool, { schema, mode: 'default' });
 
-module.exports = { db };
+console.log('[DB] MySQL pool created →', process.env.DB_HOST, '/', process.env.DB_NAME);
+
+module.exports = { db, schema, pool };
