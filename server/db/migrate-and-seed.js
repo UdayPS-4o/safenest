@@ -49,6 +49,7 @@ async function seed() {
 
   // --- Seed Users ---
   const seedUsers = [
+    // ── Residents ────────────────────────────────────────────────
     {
       phoneNumber: '+919876543211',
       role: 'RESIDENT',
@@ -59,6 +60,35 @@ async function seed() {
       flatNumber: 'B-201',
     },
     {
+      phoneNumber: '+919800011111',
+      role: 'RESIDENT',
+      fullName: 'Priya Menon',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/52.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      flatNumber: 'A-105',
+    },
+    {
+      phoneNumber: '+919800022222',
+      role: 'RESIDENT',
+      fullName: 'Vikram Patel',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/36.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      flatNumber: 'C-304',
+    },
+    {
+      phoneNumber: '+919800033333',
+      role: 'RESIDENT',
+      fullName: 'Ananya Krishnan',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/68.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      flatNumber: 'D-402',
+    },
+
+    // ── Guards ───────────────────────────────────────────────────
+    {
       phoneNumber: '+919876543212',
       role: 'GUARD',
       fullName: 'Ramesh Singh',
@@ -67,17 +97,27 @@ async function seed() {
       accountStatus: 'APPROVED',
     },
     {
+      phoneNumber: '+919800044444',
+      role: 'GUARD',
+      fullName: 'Suresh Yadav',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/76.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+    },
+
+    // ── Helpers ──────────────────────────────────────────────────
+    {
       phoneNumber: '+919876543213',
       role: 'HELPER',
-      fullName: 'Sunita Devi',
-      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/33.jpg',
+      fullName: 'Meena Kumari',          // renamed from Sunita Devi
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/57.jpg',
       societyId,
       accountStatus: 'APPROVED',
       partnerId: 'HLP-8921',
       qrCardId: 'CARD-101',
     },
     {
-      phoneNumber: '+919876543213',
+      phoneNumber: '+919800055551',
       role: 'HELPER',
       fullName: 'Kavita Sharma',
       profilePhotoUrl: 'https://randomuser.me/api/portraits/women/44.jpg',
@@ -97,13 +137,67 @@ async function seed() {
       qrCardId: 'CARD-103',
     },
     {
+      phoneNumber: '+919800055552',
+      role: 'HELPER',
+      fullName: 'Lakshmi Bai',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/63.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'HLP-8924',
+      qrCardId: 'CARD-104',
+    },
+    {
+      phoneNumber: '+919800055553',
+      role: 'HELPER',
+      fullName: 'Mohan Das',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/47.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'HLP-8925',
+      qrCardId: 'CARD-105',
+    },
+    {
+      phoneNumber: '+919800055554',
+      role: 'HELPER',
+      fullName: 'Geeta Devi',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/72.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'HLP-8926',
+      qrCardId: 'CARD-106',
+    },
+    {
+      phoneNumber: '+919800055555',
+      role: 'HELPER',
+      fullName: 'Rajesh Patel',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/62.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'HLP-8927',
+      qrCardId: 'CARD-107',
+    },
+    {
+      phoneNumber: '+919800055556',
+      role: 'HELPER',
+      fullName: 'Anita Singh',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/women/29.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'HLP-8928',
+      qrCardId: 'CARD-108',
+    },
+
+    // ── Admin ────────────────────────────────────────────────────
+    {
       phoneNumber: '+919876543214',
       role: 'ADMIN',
-      fullName: 'Society Admin',
+      fullName: 'Rajan Mehta',
       profilePhotoUrl: 'https://randomuser.me/api/portraits/men/90.jpg',
       societyId,
       accountStatus: 'APPROVED',
     },
+
+    // ── Delivery ─────────────────────────────────────────────────
     {
       phoneNumber: '+919876543215',
       role: 'DELIVERY',
@@ -113,7 +207,8 @@ async function seed() {
       accountStatus: 'APPROVED',
       partnerId: 'SWG-4829301',
     },
-    // Pending approval users for testing
+
+    // ── Pending approval users for testing ───────────────────────
     {
       phoneNumber: '+919900001111',
       role: 'RESIDENT',

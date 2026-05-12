@@ -93,18 +93,8 @@ router.get('/in-society', requireRole('GUARD', 'ADMIN', 'RESIDENT'), async (req,
   const societyId = req.user.societyId;
 
   try {
-    const insideVisitors = await db
-      .select({
-        logId: visitorLogs.id,
-        entryTime: visitorLogs.entryTime,
-        entryStatus: visitorLogs.entryStatus,
-        destinationFlat: visitorLogs.destinationFlat,
-        verificationMethod: visitorLogs.verificationMethod,
-        visitorId: users.id,
-        visitorName: users.fullName,
-        visitorPhone: users.phoneNumber,
-        visitorRole: users.role,
-      })
+    const rows = await db
+      .select()
       .from(visitorLogs)
       .leftJoin(users, eq(visitorLogs.visitorId, users.id))
       .where(
@@ -113,6 +103,18 @@ router.get('/in-society', requireRole('GUARD', 'ADMIN', 'RESIDENT'), async (req,
           eq(visitorLogs.entryStatus, 'INSIDE')
         )
       );
+
+    const insideVisitors = rows.map(r => ({
+      logId: r.visitor_logs?.id,
+      entryTime: r.visitor_logs?.entryTime,
+      entryStatus: r.visitor_logs?.entryStatus,
+      destinationFlat: r.visitor_logs?.destinationFlat,
+      verificationMethod: r.visitor_logs?.verificationMethod,
+      visitorId: r.users?.id,
+      visitorName: r.users?.fullName,
+      visitorPhone: r.users?.phoneNumber,
+      visitorRole: r.users?.role,
+    }));
 
     return res.json({ success: true, count: insideVisitors.length, visitors: insideVisitors });
   } catch (error) {

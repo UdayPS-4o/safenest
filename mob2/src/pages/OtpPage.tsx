@@ -10,7 +10,7 @@ const OtpPage: React.FC = () => {
   const { login } = useAuth();
   const { phoneNumber, otp: passedOtp } = location.state || { phoneNumber: '' };
 
-  const DEMO_NUMBERS = ['+919876543211', '+919876543212', '+919876543213', '+919876543214', '+919876543210'];
+  const DEMO_NUMBERS = ['+919876543211', '+919876543212', '+919876543213', '+919876543214', '+919876543215', '+919876543210'];
   const devOtp = passedOtp || (DEMO_NUMBERS.includes(phoneNumber) ? '123456' : null);
 
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
