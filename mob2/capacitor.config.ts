@@ -5,12 +5,13 @@ const config: CapacitorConfig = {
   appName: 'Safenest',
   webDir: 'dist',
   server: {
-    // Required for camera permissions on Android WebView
+    // Load the live production app — no local build needed
+    url: 'https://safenest.udayps.com',
+    cleartext: false,
     androidScheme: 'https',
   },
   android: {
-    // Allow WebView to access camera via getUserMedia
-    allowMixedContent: true,
+    allowMixedContent: false,
     webContentsDebuggingEnabled: true,
   },
 };

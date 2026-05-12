@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, ShieldAlert, X, CheckCircle, XCircle, RotateCcw, Scan, Package, MapPin } from 'lucide-react';
+import { Search, ShieldAlert, X, CheckCircle, XCircle, RotateCcw, Scan, Package, MapPin, Camera } from 'lucide-react';
 import { ApiService } from '../services/api';
+import { Capacitor } from '@capacitor/core';
+import { Camera as CapCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import jsQR from 'jsqr';
 import { Html5Qrcode } from 'html5-qrcode';
 
 type ScanResult = {
@@ -8,7 +11,6 @@ type ScanResult = {
   name: string;
   phone?: string;
   message: string;
-  // Delivery-specific
   isDelivery?: boolean;
   platform?: string;
   residentFlat?: string;
@@ -35,6 +37,8 @@ const Corner = ({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) => {
   );
 };
 
+const IS_NATIVE = Capacitor.isNativePlatform();
+
 const GuardHome: React.FC<{ user: any }> = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
@@ -42,43 +46,91 @@ const GuardHome: React.FC<{ user: any }> = () => {
   const [scanResult, setScanResult] = useState<ScanResult>(null);
   const [resultLoading, setResultLoading] = useState(false);
   const [scannerError, setScannerError] = useState('');
+  const [nativeScanning, setNativeScanning] = useState(false);
+
+  // Web scanner refs
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const scannerStarted = useRef(false);
 
+  // ──────────────────────────────────────────────────────────────
+  // NATIVE: use @capacitor/camera to capture a photo then jsQR
+  // ──────────────────────────────────────────────────────────────
+  const scanNative = useCallback(async () => {
+    setNativeScanning(true);
+    setScannerError('');
+    try {
+      const photo = await CapCamera.getPhoto({
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+        quality: 90,
+        width: 800,
+        correctOrientation: true,
+        promptLabelHeader: 'Scan QR Code',
+        promptLabelPhoto: '',
+        promptLabelPicture: 'Take Photo',
+      });
 
-  const startScanner = useCallback(async () => {
+      if (!photo.dataUrl) throw new Error('No image captured');
+
+      // Decode QR from the captured image
+      const img = new Image();
+      img.src = photo.dataUrl;
+      await new Promise<void>((res) => { img.onload = () => res(); });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+
+      if (code) {
+        handleScanSuccess(code.data);
+      } else {
+        setScannerError('No QR code detected. Try again with better lighting.');
+      }
+    } catch (err: any) {
+      if (!err.message?.includes('cancelled') && !err.message?.includes('cancel')) {
+        setScannerError(err?.message || 'Could not open camera');
+      }
+    } finally {
+      setNativeScanning(false);
+    }
+  }, []);
+
+  // ──────────────────────────────────────────────────────────────
+  // WEB: html5-qrcode continuous scanner
+  // ──────────────────────────────────────────────────────────────
+  const startWebScanner = useCallback(async () => {
     if (scannerStarted.current) return;
     scannerStarted.current = true;
     setScannerError('');
-
     try {
       const qr = new Html5Qrcode('qr-reader');
       scannerRef.current = qr;
-
       await qr.start(
-        { facingMode: 'environment' }, // BACK CAMERA
-        {
-          fps: 15,
-          qrbox: { width: 230, height: 230 },
-          aspectRatio: 1.0,
-        },
+        { facingMode: 'environment' },
+        { fps: 15, qrbox: { width: 230, height: 230 }, aspectRatio: 1.0 },
         async (decodedText) => {
-          await stopScanner();
+          await stopWebScanner();
           setScannerActive(false);
           handleScanSuccess(decodedText);
         },
-        () => {} // frame errors — ignored
+        () => {}
       );
       setScannerActive(true);
     } catch (err: any) {
       scannerStarted.current = false;
-      setScannerError(err?.message?.includes('Permission') 
-        ? 'Camera permission denied. Please allow camera access.'
-        : err?.message || 'Could not start camera');
+      setScannerError(
+        err?.message?.includes('Permission')
+          ? 'Camera permission denied. Please allow camera access.'
+          : err?.message || 'Could not start camera'
+      );
     }
   }, []);
 
-  const stopScanner = useCallback(async () => {
+  const stopWebScanner = useCallback(async () => {
     if (scannerRef.current) {
       try { await scannerRef.current.stop(); } catch {}
       scannerRef.current = null;
@@ -89,20 +141,31 @@ const GuardHome: React.FC<{ user: any }> = () => {
 
   const restartScanner = useCallback(async () => {
     setScanResult(null);
-    await stopScanner();
-    setTimeout(() => startScanner(), 300);
-  }, [startScanner, stopScanner]);
+    setScannerError('');
+    if (IS_NATIVE) {
+      scanNative();
+    } else {
+      await stopWebScanner();
+      setTimeout(() => startWebScanner(), 300);
+    }
+  }, [scanNative, startWebScanner, stopWebScanner]);
 
   useEffect(() => {
-    startScanner();
-    return () => { stopScanner(); };
-  }, [startScanner, stopScanner]);
+    if (IS_NATIVE) {
+      // On native, auto-open camera immediately
+      scanNative();
+    } else {
+      startWebScanner();
+      return () => { stopWebScanner(); };
+    }
+  }, []);
 
-
+  // ──────────────────────────────────────────────────────────────
+  // Shared QR handler
+  // ──────────────────────────────────────────────────────────────
   const handleScanSuccess = async (qrValue: string) => {
     setResultLoading(true);
     try {
-      // Delivery partner identity QR — format: "DEL:<userId>"
       if (qrValue.startsWith('DEL:')) {
         const res = await ApiService.scanDeliveryQr(qrValue);
         if (res.data.success && res.data.verified) {
@@ -123,7 +186,6 @@ const GuardHome: React.FC<{ user: any }> = () => {
         return;
       }
 
-      // Pre-approval QR flow (resident-generated codes)
       const res = await ApiService.verifyQr(qrValue);
       if (res.data.success && res.data.verified) {
         await ApiService.logEntry({
@@ -192,7 +254,6 @@ const GuardHome: React.FC<{ user: any }> = () => {
           </div>
         </div>
 
-        {/* Search bar */}
         <form onSubmit={handleSearch}>
           <div style={{ display: 'flex', gap: 8 }}>
             <div style={{ flex: 1, position: 'relative' }}>
@@ -212,43 +273,91 @@ const GuardHome: React.FC<{ user: any }> = () => {
       </div>
 
       {/* Main Camera Area */}
-      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#0A0A0F', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ flex: 1, position: 'relative', overflow: 'hidden', background: '#0A0A0F', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px 16px' }}>
 
-        {/* Camera feed container */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: 360 }}>
-          {/* Dark overlay with cutout — achieved by the 4 corner pieces */}
-          <div className="scanner-frame" style={{ width: '100%', aspectRatio: '1', background: '#111', borderRadius: 20 }}>
-            <div id="qr-reader" style={{ width: '100%', height: '100%', position: 'relative' }} />
-            {/* Scan line */}
-            {scannerActive && <div className="scanner-line" />}
-            {/* Corner brackets */}
-            {(['tl','tr','bl','br'] as const).map(p => <Corner key={p} pos={p} />)}
-          </div>
+        {IS_NATIVE ? (
+          /* ── Native camera UI ─────────────────────────────── */
+          <div style={{ width: '100%', maxWidth: 360, textAlign: 'center' }}>
+            <div style={{
+              width: '100%', aspectRatio: '1', background: 'rgba(255,255,255,0.04)',
+              border: '1.5px solid rgba(229,57,53,0.25)', borderRadius: 24,
+              display: 'flex', flexDirection: 'column', alignItems: 'center',
+              justifyContent: 'center', gap: 16, marginBottom: 20,
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {/* Animated scan line when active */}
+              {nativeScanning && <div className="scanner-line" />}
+              {(['tl','tr','bl','br'] as const).map(p => <Corner key={p} pos={p} />)}
 
-          {/* Status text below scanner */}
-          <div style={{ textAlign: 'center', marginTop: 16 }}>
-            {scannerError ? (
-              <div style={{ background: 'rgba(229,57,53,0.1)', border: '1px solid rgba(229,57,53,0.3)', borderRadius: 12, padding: '10px 16px' }}>
-                <p style={{ color: '#FCA5A5', fontSize: 13, margin: '0 0 8px', fontWeight: 600 }}>{scannerError}</p>
-                <button onClick={restartScanner} style={{ background: 'var(--brand)', border: 'none', color: 'white', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <RotateCcw size={14} /> Try Again
-                </button>
+              <div style={{ width: 72, height: 72, borderRadius: 20, background: 'rgba(229,57,53,0.15)', border: '1.5px solid rgba(229,57,53,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Camera size={36} color="var(--brand)" />
               </div>
-            ) : scannerActive ? (
-              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                <Scan size={13} /> Point camera at visitor's QR code
-              </p>
-            ) : resultLoading ? (
-              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, margin: 0 }}>Verifying QR...</p>
-            ) : (
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>Starting camera...</p>
+              <div>
+                <p style={{ color: 'white', fontWeight: 700, fontSize: 16, margin: '0 0 4px' }}>
+                  {nativeScanning ? 'Opening camera...' : 'Tap to Scan QR'}
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>
+                  Uses native camera — works on all devices
+                </p>
+              </div>
+            </div>
+
+            {scannerError && (
+              <div style={{ background: 'rgba(229,57,53,0.1)', border: '1px solid rgba(229,57,53,0.3)', borderRadius: 12, padding: '10px 16px', marginBottom: 16 }}>
+                <p style={{ color: '#FCA5A5', fontSize: 13, margin: '0 0 8px', fontWeight: 600 }}>{scannerError}</p>
+              </div>
             )}
+
+            <button
+              onClick={scanNative}
+              disabled={nativeScanning || resultLoading}
+              style={{
+                width: '100%', padding: '16px', borderRadius: 16,
+                background: nativeScanning ? 'rgba(255,255,255,0.08)' : 'linear-gradient(135deg, var(--brand), #B71C1C)',
+                border: 'none', color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: nativeScanning ? 'none' : '0 4px 24px rgba(229,57,53,0.4)',
+              }}
+            >
+              {nativeScanning
+                ? <><div style={{ width: 20, height: 20, border: '2.5px solid rgba(255,255,255,0.2)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} /> Opening Camera...</>
+                : <><Scan size={20} /> Scan QR Code</>
+              }
+            </button>
           </div>
-        </div>
+        ) : (
+          /* ── Web html5-qrcode UI ─────────────────────────── */
+          <div style={{ position: 'relative', width: '100%', maxWidth: 360 }}>
+            <div className="scanner-frame" style={{ width: '100%', aspectRatio: '1', background: '#111', borderRadius: 20 }}>
+              <div id="qr-reader" style={{ width: '100%', height: '100%', position: 'relative' }} />
+              {scannerActive && <div className="scanner-line" />}
+              {(['tl','tr','bl','br'] as const).map(p => <Corner key={p} pos={p} />)}
+            </div>
+
+            <div style={{ textAlign: 'center', marginTop: 16 }}>
+              {scannerError ? (
+                <div style={{ background: 'rgba(229,57,53,0.1)', border: '1px solid rgba(229,57,53,0.3)', borderRadius: 12, padding: '10px 16px' }}>
+                  <p style={{ color: '#FCA5A5', fontSize: 13, margin: '0 0 8px', fontWeight: 600 }}>{scannerError}</p>
+                  <button onClick={restartScanner} style={{ background: 'var(--brand)', border: 'none', color: 'white', padding: '8px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <RotateCcw size={14} /> Try Again
+                  </button>
+                </div>
+              ) : scannerActive ? (
+                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  <Scan size={13} /> Point camera at visitor's QR code
+                </p>
+              ) : resultLoading ? (
+                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, margin: 0 }}>Verifying QR...</p>
+              ) : (
+                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12, margin: 0 }}>Starting camera...</p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Scan Result Card */}
         {(scanResult || resultLoading) && (
-          <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '16px', background: 'linear-gradient(to top, #0A0A0F 70%, transparent)' }}>
+          <div style={{ position: IS_NATIVE ? 'relative' : 'absolute', bottom: IS_NATIVE ? 'auto' : 0, left: 0, right: 0, padding: '16px', marginTop: IS_NATIVE ? 16 : 0, background: IS_NATIVE ? 'transparent' : 'linear-gradient(to top, #0A0A0F 70%, transparent)' }}>
             <div style={{
               borderRadius: 20, padding: '16px 18px',
               background: resultLoading ? 'rgba(255,255,255,0.05)' : (scanResult?.success ? 'rgba(21,128,61,0.15)' : 'rgba(220,38,38,0.15)'),
@@ -274,9 +383,7 @@ const GuardHome: React.FC<{ user: any }> = () => {
                       </div>
                       <div style={{ flex: 1 }}>
                         {scanResult.name && <p style={{ margin: '0 0 2px', fontWeight: 800, fontSize: 16, color: 'white' }}>{scanResult.name}</p>}
-                        {scanResult.platform && (
-                          <p style={{ margin: '0 0 2px', fontSize: 12, color: '#FBBF24', fontWeight: 700 }}>✦ Verified {scanResult.platform} Partner</p>
-                        )}
+                        {scanResult.platform && <p style={{ margin: '0 0 2px', fontSize: 12, color: '#FBBF24', fontWeight: 700 }}>✦ Verified {scanResult.platform} Partner</p>}
                         {scanResult.phone && <p style={{ margin: '0 0 4px', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{scanResult.phone}</p>}
                         <p style={{ margin: 0, fontSize: 13, color: scanResult.success ? '#4ADE80' : '#F87171', fontWeight: 600 }}>{scanResult.message}</p>
                       </div>
@@ -286,7 +393,6 @@ const GuardHome: React.FC<{ user: any }> = () => {
                     </button>
                   </div>
 
-                  {/* Delivery detail strip */}
                   {scanResult.isDelivery && (scanResult.residentFlat || scanResult.residentName) && (
                     <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                       <MapPin size={14} color="#E57373" style={{ marginTop: 2, flexShrink: 0 }} />

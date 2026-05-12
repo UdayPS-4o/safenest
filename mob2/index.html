@@ -2,16 +2,50 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
     <title>SafeNest | Smart Society Security</title>
-    <meta name="description" content="SafeNest - Premium society security and visitor management platform." />
-    <meta name="theme-color" content="#16171d" />
+    <meta name="description" content="SafeNest – Premium society security and visitor management platform. QR-based gate access, pre-approvals, and delivery partner verification." />
+
+    <!-- PWA / Theme -->
+    <meta name="theme-color" content="#E53935" />
+    <meta name="background-color" content="#0A0A0F" />
+    <meta name="application-name" content="SafeNest" />
+
+    <!-- iOS PWA -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="SafeNest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+
+    <!-- Microsoft / Windows -->
+    <meta name="msapplication-TileColor" content="#E53935" />
+    <meta name="msapplication-TileImage" content="/icon-192.png" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Open Graph (for sharing links) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="SafeNest – Smart Society Security" />
+    <meta property="og:description" content="QR-based gate access and visitor management for modern societies." />
+    <meta property="og:image" content="/icon-512.png" />
+
+    <!-- Splash screen color while loading -->
     <style>
-      body {
-        background-color: #16171d;
+      html, body {
+        background-color: #0A0A0F;
         margin: 0;
         padding: 0;
+        overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
+      }
+      /* Prevent white flash on iOS */
+      #root {
+        min-height: 100dvh;
+        background-color: #0A0A0F;
       }
     </style>
   </head>
