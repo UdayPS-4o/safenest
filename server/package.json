@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "node index.js",
+    "start": "node api.js && node index.js",
+    "dev": "node api.js && node index.js",
     "migrate": "npx drizzle-kit push",
     "seed": "node db/migrate-and-seed.js",
     "db:setup": "node db/migrate-and-seed.js",
