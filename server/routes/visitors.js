@@ -29,8 +29,8 @@ router.post('/pre-approve', requireRole('RESIDENT'), async (req, res) => {
       visitorName,
       visitorPhone,
       qrCodeValue,
-      validFrom: new Date(validFrom).toISOString(),
-      validUntil: new Date(validUntil).toISOString(),
+      validFrom: new Date(validFrom),
+      validUntil: new Date(validUntil),
     });
 
     return res.status(201).json({
@@ -51,7 +51,7 @@ router.post('/pre-approve', requireRole('RESIDENT'), async (req, res) => {
  */
 router.get('/pre-approvals', requireRole('RESIDENT'), async (req, res) => {
   try {
-    const activeApprovals = db
+    const activeApprovals = await db
       .select()
       .from(preApprovals)
       .where(
@@ -61,7 +61,6 @@ router.get('/pre-approvals', requireRole('RESIDENT'), async (req, res) => {
         )
       );
 
-    // Filter out expired ones in JS or leave as is
     const validApprovals = activeApprovals.filter(a => new Date() <= new Date(a.validUntil));
     
     return res.json({ success: true, preApprovals: validApprovals });
@@ -79,8 +78,7 @@ router.delete('/pre-approvals/:id', requireRole('RESIDENT'), async (req, res) =>
   const id = parseInt(req.params.id, 10);
   try {
     await db.delete(preApprovals)
-      .where(and(eq(preApprovals.id, id), eq(preApprovals.residentId, req.user.id)))
-      ;
+      .where(and(eq(preApprovals.id, id), eq(preApprovals.residentId, req.user.id)));
     return res.json({ success: true, message: 'Pre-approval cancelled' });
   } catch (error) {
     console.error('[DeletePreApproval] Error:', error);
@@ -90,13 +88,12 @@ router.delete('/pre-approvals/:id', requireRole('RESIDENT'), async (req, res) =>
 
 /**
  * GET /api/visitors/in-society
- * Guard gets live list of people currently inside the society
  */
 router.get('/in-society', requireRole('GUARD', 'ADMIN', 'RESIDENT'), async (req, res) => {
   const societyId = req.user.societyId;
 
   try {
-    const insideVisitors = db
+    const insideVisitors = await db
       .select({
         logId: visitorLogs.id,
         entryTime: visitorLogs.entryTime,
@@ -126,8 +123,6 @@ router.get('/in-society', requireRole('GUARD', 'ADMIN', 'RESIDENT'), async (req,
 
 /**
  * POST /api/visitors/log-entry
- * Guard logs entry for a visitor
- * Body: { visitorPhone, destinationFlat, verificationMethod, qrCodeValue? }
  */
 router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
   const { visitorPhone, destinationFlat, verificationMethod, qrCodeValue } = req.body;
@@ -139,7 +134,6 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
   try {
     let visitor = null;
 
-    // Find or create guest user
     const existingRows = await db.select().from(users).where(eq(users.phoneNumber, visitorPhone));
     visitor = existingRows[0];
 
@@ -154,20 +148,17 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
       visitor = newRows[0];
     }
 
-    // Validate QR pre-approval if method is PRE_APPROVAL
     if (verificationMethod === 'PRE_APPROVAL' && qrCodeValue) {
-      const approvals = db
+      const approvals = await db
         .select()
         .from(preApprovals)
-        .where(eq(preApprovals.qrCodeValue, qrCodeValue))
-        ;
+        .where(eq(preApprovals.qrCodeValue, qrCodeValue));
 
       const approval = approvals[0];
       if (!approval || approval.isUsed || new Date() > new Date(approval.validUntil)) {
         return res.status(400).json({ success: false, message: 'Invalid or expired pre-approval QR' });
       }
 
-      // Mark as used
       await db.update(preApprovals).set({ isUsed: true }).where(eq(preApprovals.id, approval.id));
     }
 
@@ -198,15 +189,14 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
 
 /**
  * PATCH /api/visitors/log-exit/:logId
- * Guard marks a visitor as exited
  */
 router.patch('/log-exit/:logId', requireRole('GUARD'), async (req, res) => {
   const logId = parseInt(req.params.logId, 10);
 
   try {
-    db
+    await db
       .update(visitorLogs)
-      .set({ exitTime: new Date().toISOString(), entryStatus: 'EXITED' })
+      .set({ exitTime: new Date(), entryStatus: 'EXITED' })
       .where(eq(visitorLogs.id, logId));
     return res.json({ success: true, message: 'Exit logged' });
   } catch (error) {
@@ -216,8 +206,6 @@ router.patch('/log-exit/:logId', requireRole('GUARD'), async (req, res) => {
 
 /**
  * POST /api/visitors/verify-qr
- * Guard scans a QR code to verify entry
- * Body: { qrCodeValue }
  */
 router.post('/verify-qr', requireRole('GUARD'), async (req, res) => {
   const { qrCodeValue } = req.body;
@@ -226,11 +214,10 @@ router.post('/verify-qr', requireRole('GUARD'), async (req, res) => {
   }
 
   try {
-    const rows = db
+    const rows = await db
       .select()
       .from(preApprovals)
-      .where(eq(preApprovals.qrCodeValue, qrCodeValue))
-      ;
+      .where(eq(preApprovals.qrCodeValue, qrCodeValue));
     const result = rows[0];
 
     if (!result) {

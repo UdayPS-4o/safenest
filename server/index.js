@@ -7,6 +7,7 @@ const helperRoutes = require('./routes/helpers');
 const visitorRoutes = require('./routes/visitors');
 const adminRoutes = require('./routes/admin');
 const alertRoutes = require('./routes/alerts');
+const deliveryRoutes = require('./routes/delivery');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,6 +22,7 @@ app.use('/api/helpers', helperRoutes);
 app.use('/api/visitors', visitorRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/delivery', deliveryRoutes);
 
 // ── Health Check ───────────────────────────────────────────
 app.get('/api/health', (req, res) => {

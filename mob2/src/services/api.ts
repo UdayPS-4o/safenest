@@ -81,6 +81,9 @@ export const ApiService = {
     severity: string;
     targetUserId?: number;
   }) => api.post('/api/alerts', data),
+
+  // Delivery Partner (Guard scans)
+  scanDeliveryQr: (qrValue: string) => api.post('/api/delivery/scan', { qrValue }),
 };
 
 export default api;

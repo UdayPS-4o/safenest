@@ -5,13 +5,10 @@ const { users, workHistory, societies } = require('../db').schema;
 const { eq, and, sql } = require('drizzle-orm');
 const { authMiddleware, requireRole } = require('../middleware/auth');
 
-// Apply auth to all helper routes
 router.use(authMiddleware);
 
 /**
  * GET /api/helpers
- * Search helpers in the caller's society.
- * Query: ?search=<name or phone>
  */
 router.get('/', async (req, res) => {
   const { search } = req.query;
@@ -21,7 +18,6 @@ router.get('/', async (req, res) => {
     const conditions = [eq(users.role, 'HELPER'), eq(users.societyId, societyId)];
     let rows = await db.select().from(users).where(and(...conditions));
 
-    // Filter by search term if provided
     if (search) {
       const term = search.toLowerCase();
       rows = rows.filter(
@@ -40,7 +36,6 @@ router.get('/', async (req, res) => {
 
 /**
  * GET /api/helpers/:id
- * Get a single helper's profile with their work history
  */
 router.get('/:id', async (req, res) => {
   const helperId = parseInt(req.params.id, 10);
@@ -53,8 +48,7 @@ router.get('/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Helper not found' });
     }
 
-    // Fetch work history with resident and society info joined
-    const history = db
+    const history = await db
       .select({
         id: workHistory.id,
         jobTitle: workHistory.jobTitle,
@@ -68,8 +62,7 @@ router.get('/:id', async (req, res) => {
       .from(workHistory)
       .leftJoin(societies, eq(workHistory.societyId, societies.id))
       .leftJoin(users, eq(workHistory.residentId, users.id))
-      .where(eq(workHistory.helperId, helperId))
-      ;
+      .where(eq(workHistory.helperId, helperId));
 
     return res.json({ success: true, helper, workHistory: history });
   } catch (error) {
@@ -80,12 +73,11 @@ router.get('/:id', async (req, res) => {
 
 /**
  * GET /api/helpers/:id/work-history
- * Get full work history for a helper (residents only)
  */
 router.get('/:id/work-history', requireRole('RESIDENT', 'ADMIN'), async (req, res) => {
   const helperId = parseInt(req.params.id, 10);
   try {
-    const history = db
+    const history = await db
       .select({
         id: workHistory.id,
         jobTitle: workHistory.jobTitle,
@@ -99,8 +91,7 @@ router.get('/:id/work-history', requireRole('RESIDENT', 'ADMIN'), async (req, re
       .from(workHistory)
       .leftJoin(societies, eq(workHistory.societyId, societies.id))
       .leftJoin(users, eq(workHistory.residentId, users.id))
-      .where(eq(workHistory.helperId, helperId))
-      ;
+      .where(eq(workHistory.helperId, helperId));
     return res.json({ success: true, workHistory: history });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });

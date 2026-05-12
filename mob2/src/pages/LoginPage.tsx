@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Shield, ArrowRight, Phone } from 'lucide-react';
 import { ApiService } from '../services/api';
 
@@ -7,7 +6,6 @@ const LoginPage: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   const handleSendOtp = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -100,9 +98,10 @@ const LoginPage: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
               { label: '🏠 Resident', num: '9876543211' },
-              { label: '🛡️ Guard', num: '9876543212' },
-              { label: '🔧 Helper', num: '9876543213' },
-              { label: '⚙️ Admin', num: '9876543214' },
+              { label: '🛡️ Guard',    num: '9876543212' },
+              { label: '🔧 Helper',   num: '9876543213' },
+              { label: '⚙️ Admin',    num: '9876543214' },
+              { label: '🚚 Delivery', num: '9876543215' },
             ].map(({ label, num }) => (
               <button
                 key={num}

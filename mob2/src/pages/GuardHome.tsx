@@ -1,9 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Search, ShieldAlert, X, CheckCircle, XCircle, RotateCcw, Scan } from 'lucide-react';
+import { Search, ShieldAlert, X, CheckCircle, XCircle, RotateCcw, Scan, Package, MapPin } from 'lucide-react';
 import { ApiService } from '../services/api';
 import { Html5Qrcode } from 'html5-qrcode';
 
-type ScanResult = { success: boolean; name: string; phone?: string; message: string } | null;
+type ScanResult = {
+  success: boolean;
+  name: string;
+  phone?: string;
+  message: string;
+  // Delivery-specific
+  isDelivery?: boolean;
+  platform?: string;
+  residentFlat?: string;
+  residentName?: string;
+  deliveryAddress?: string;
+} | null;
 
 const Corner = ({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) => {
   const r = pos.includes('r');
@@ -91,6 +102,28 @@ const GuardHome: React.FC<{ user: any }> = () => {
   const handleScanSuccess = async (qrValue: string) => {
     setResultLoading(true);
     try {
+      // Delivery partner identity QR — format: "DEL:<userId>"
+      if (qrValue.startsWith('DEL:')) {
+        const res = await ApiService.scanDeliveryQr(qrValue);
+        if (res.data.success && res.data.verified) {
+          const { partner, delivery } = res.data;
+          setScanResult({
+            success: true,
+            name: partner.fullName,
+            message: 'Delivery partner admitted & logged ✅',
+            isDelivery: true,
+            platform: delivery.platform,
+            residentFlat: delivery.residentFlat,
+            residentName: delivery.residentName,
+            deliveryAddress: delivery.orderInfo,
+          });
+        } else {
+          setScanResult({ success: false, name: '', message: res.data.message || 'Delivery QR verification failed' });
+        }
+        return;
+      }
+
+      // Pre-approval QR flow (resident-generated codes)
       const res = await ApiService.verifyQr(qrValue);
       if (res.data.success && res.data.verified) {
         await ApiService.logEntry({
@@ -231,14 +264,19 @@ const GuardHome: React.FC<{ user: any }> = () => {
                 <>
                   <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 14, background: scanResult.success ? 'rgba(21,128,61,0.3)' : 'rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        {scanResult.success
-                          ? <CheckCircle size={24} color="#4ADE80" />
-                          : <XCircle size={24} color="#F87171" />
+                      <div style={{ width: 44, height: 44, borderRadius: 14, background: scanResult.success ? (scanResult.isDelivery ? 'rgba(255,153,0,0.25)' : 'rgba(21,128,61,0.3)') : 'rgba(220,38,38,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {scanResult.isDelivery
+                          ? <Package size={24} color="#FBBF24" />
+                          : scanResult.success
+                            ? <CheckCircle size={24} color="#4ADE80" />
+                            : <XCircle size={24} color="#F87171" />
                         }
                       </div>
-                      <div>
+                      <div style={{ flex: 1 }}>
                         {scanResult.name && <p style={{ margin: '0 0 2px', fontWeight: 800, fontSize: 16, color: 'white' }}>{scanResult.name}</p>}
+                        {scanResult.platform && (
+                          <p style={{ margin: '0 0 2px', fontSize: 12, color: '#FBBF24', fontWeight: 700 }}>✦ Verified {scanResult.platform} Partner</p>
+                        )}
                         {scanResult.phone && <p style={{ margin: '0 0 4px', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>{scanResult.phone}</p>}
                         <p style={{ margin: 0, fontSize: 13, color: scanResult.success ? '#4ADE80' : '#F87171', fontWeight: 600 }}>{scanResult.message}</p>
                       </div>
@@ -247,8 +285,22 @@ const GuardHome: React.FC<{ user: any }> = () => {
                       <X size={16} color="rgba(255,255,255,0.6)" />
                     </button>
                   </div>
+
+                  {/* Delivery detail strip */}
+                  {scanResult.isDelivery && (scanResult.residentFlat || scanResult.residentName) && (
+                    <div style={{ marginTop: 12, background: 'rgba(255,255,255,0.05)', borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                      <MapPin size={14} color="#E57373" style={{ marginTop: 2, flexShrink: 0 }} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Delivering to</p>
+                        {scanResult.residentName && <p style={{ margin: '1px 0 0', fontSize: 14, fontWeight: 700, color: 'white' }}>{scanResult.residentName}</p>}
+                        <p style={{ margin: '1px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>Flat {scanResult.residentFlat}</p>
+                        {scanResult.deliveryAddress && <p style={{ margin: '2px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.35)' }}>{scanResult.deliveryAddress}</p>}
+                      </div>
+                    </div>
+                  )}
+
                   <button onClick={restartScanner} style={{ marginTop: 12, width: '100%', padding: '12px', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', fontWeight: 700, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                    <RotateCcw size={16} /> Scan Next Visitor
+                    <RotateCcw size={16} /> Scan Next
                   </button>
                 </>
               )}

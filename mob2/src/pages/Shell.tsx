@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, Search, Users, LogOut, BarChart2, UserPlus, CreditCard, QrCode, ClipboardList } from 'lucide-react';
+import { Home, Search, Users, LogOut, BarChart2, UserPlus, CreditCard, QrCode, ClipboardList, Wrench, Package } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ResidentHome from './ResidentHome';
 import HelpersList from './HelpersList';
@@ -9,6 +9,8 @@ import GuardLog from './GuardLog';
 import AdminOverview from './AdminOverview';
 import UserManagement from './UserManagement';
 import CardManagement from './CardManagement';
+import HelperHome from './HelperHome';
+import DeliveryHome from './DeliveryHome';
 
 const Shell: React.FC = () => {
   const { user, logout } = useAuth();
@@ -21,6 +23,10 @@ const Shell: React.FC = () => {
         return [<GuardHome user={user} />, <GuardLog user={user} />];
       case 'ADMIN':
         return [<AdminOverview user={user} />, <UserManagement user={user} />, <CardManagement user={user} />];
+      case 'HELPER':
+        return [<HelperHome user={user} />];
+      case 'DELIVERY':
+        return [<DeliveryHome user={user} />];
       case 'RESIDENT':
       default:
         return [<ResidentHome user={user} />, <HelpersList user={user} />, <Household user={user} />];
@@ -40,6 +46,14 @@ const Shell: React.FC = () => {
           { icon: UserPlus, label: 'Users' },
           { icon: CreditCard, label: 'Cards' },
         ];
+      case 'HELPER':
+        return [
+          { icon: Wrench, label: 'Dashboard' },
+        ];
+      case 'DELIVERY':
+        return [
+          { icon: Package, label: 'My QR' },
+        ];
       default:
         return [
           { icon: Home, label: 'Home' },
@@ -54,9 +68,11 @@ const Shell: React.FC = () => {
 
   const getRoleBadgeStyle = () => {
     switch (role) {
-      case 'GUARD': return { bg: '#FEF3C7', color: '#92400E', text: 'Guard' };
-      case 'ADMIN': return { bg: '#EDE9FE', color: '#5B21B6', text: 'Admin' };
-      default: return { bg: '#DCFCE7', color: '#14532D', text: 'Resident' };
+      case 'GUARD':    return { bg: '#FEF3C7', color: '#92400E', text: 'Guard' };
+      case 'ADMIN':    return { bg: '#EDE9FE', color: '#5B21B6', text: 'Admin' };
+      case 'HELPER':   return { bg: '#FFF7ED', color: '#9A3412', text: 'Helper' };
+      case 'DELIVERY': return { bg: '#FFF4E5', color: '#B45309', text: '🚚 Delivery' };
+      default:         return { bg: '#DCFCE7', color: '#14532D', text: 'Resident' };
     }
   };
   const badge = getRoleBadgeStyle();

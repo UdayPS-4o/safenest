@@ -104,6 +104,15 @@ async function seed() {
       societyId,
       accountStatus: 'APPROVED',
     },
+    {
+      phoneNumber: '+919876543215',
+      role: 'DELIVERY',
+      fullName: 'Rahul Kumar',
+      profilePhotoUrl: 'https://randomuser.me/api/portraits/men/22.jpg',
+      societyId,
+      accountStatus: 'APPROVED',
+      partnerId: 'SWG-4829301',
+    },
     // Pending approval users for testing
     {
       phoneNumber: '+919900001111',

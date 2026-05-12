@@ -9,32 +9,31 @@ router.use(authMiddleware, requireRole('ADMIN'));
 
 /**
  * GET /api/admin/overview
- * Society overview metrics
  */
 router.get('/overview', async (req, res) => {
   const societyId = req.user.societyId;
   try {
-    const [guardCount] = db
+    const [guardCount] = await db
       .select({ value: count() })
       .from(users)
       .where(and(eq(users.role, 'GUARD'), eq(users.societyId, societyId)));
 
-    const [helperCount] = db
+    const [helperCount] = await db
       .select({ value: count() })
       .from(users)
       .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId)));
 
-    const [residentCount] = db
+    const [residentCount] = await db
       .select({ value: count() })
       .from(users)
       .where(and(eq(users.role, 'RESIDENT'), eq(users.societyId, societyId)));
 
-    const [openAlerts] = db
+    const [openAlerts] = await db
       .select({ value: count() })
       .from(incidentsAndAlerts)
       .where(and(eq(incidentsAndAlerts.societyId, societyId), eq(incidentsAndAlerts.status, 'OPEN')));
 
-    const [pendingApprovals] = db
+    const [pendingApprovals] = await db
       .select({ value: count() })
       .from(users)
       .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING')));
@@ -47,26 +46,27 @@ router.get('/overview', async (req, res) => {
       pendingApprovals: pendingApprovals?.value ?? 0,
     };
 
-    // Get recent alerts for overview
-    const recentAlerts = await db.select().from(incidentsAndAlerts)
+    const recentAlerts = await db
+      .select()
+      .from(incidentsAndAlerts)
       .where(eq(incidentsAndAlerts.societyId, societyId))
-      // SQLite limit and order by might require more complex setup, but basic works.
-      .reverse().slice(0, 5);
+      .limit(5)
+      .orderBy(incidentsAndAlerts.createdAt);
 
     return res.json({ success: true, ...metrics, recentAlerts });
   } catch (error) {
+    console.error('[Admin Overview] Error:', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
 /**
  * GET /api/admin/pending-users
- * Users awaiting account approval
  */
 router.get('/pending-users', async (req, res) => {
   const societyId = req.user.societyId;
   try {
-    const pendingUsers = db
+    const pendingUsers = await db
       .select()
       .from(users)
       .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING')));
@@ -104,12 +104,11 @@ router.patch('/users/:id/ban', async (req, res) => {
 
 /**
  * GET /api/admin/helpers
- * All helpers in the society for card management
  */
 router.get('/helpers', async (req, res) => {
   const societyId = req.user.societyId;
   try {
-    const helperList = db
+    const helperList = await db
       .select()
       .from(users)
       .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId)));
@@ -121,7 +120,6 @@ router.get('/helpers', async (req, res) => {
 
 /**
  * PATCH /api/admin/helpers/:id/revoke-card
- * Revoke/suspend a helper's QR card
  */
 router.patch('/helpers/:id/revoke-card', async (req, res) => {
   const helperId = parseInt(req.params.id, 10);
@@ -135,15 +133,15 @@ router.patch('/helpers/:id/revoke-card', async (req, res) => {
 
 /**
  * GET /api/admin/alerts
- * All open incidents
  */
 router.get('/alerts', async (req, res) => {
   const societyId = req.user.societyId;
   try {
-    const alerts = db
+    const alerts = await db
       .select()
       .from(incidentsAndAlerts)
-      .where(eq(incidentsAndAlerts.societyId, societyId));
+      .where(eq(incidentsAndAlerts.societyId, societyId))
+      .orderBy(incidentsAndAlerts.createdAt);
     return res.json({ success: true, alerts });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
