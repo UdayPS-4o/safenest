@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Package, MapPin, CheckCircle, RefreshCw, Truck } from 'lucide-react';
+import { MapPin, CheckCircle, RefreshCw, Truck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import * as QRCode from 'qrcode';
 

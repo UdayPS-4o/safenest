@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   CheckCircle, Clock, MapPin, Phone, Star, Briefcase,
-  CalendarDays, LogIn, LogOut, Bell, ChevronRight, User
+  CalendarDays, LogIn, LogOut, Bell, User
 } from 'lucide-react';
 
 interface HelperHomeProps {

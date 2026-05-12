@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Shield, ArrowRight, Phone } from 'lucide-react';
 import { ApiService } from '../services/api';
 
 const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
