@@ -16,3 +16,6 @@ build/
 Thumbs.db
 
 studio
+.vscode/*
+.env
+.env.*
