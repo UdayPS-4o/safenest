@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 
   try {
     const conditions = [eq(users.role, 'HELPER'), eq(users.societyId, societyId)];
-    let rows = db.select().from(users).where(and(...conditions)).all();
+    let rows = await db.select().from(users).where(and(...conditions));
 
     // Filter by search term if provided
     if (search) {
@@ -46,7 +46,7 @@ router.get('/:id', async (req, res) => {
   const helperId = parseInt(req.params.id, 10);
 
   try {
-    const helperRows = db.select().from(users).where(eq(users.id, helperId)).all();
+    const helperRows = await db.select().from(users).where(eq(users.id, helperId));
     const helper = helperRows[0];
 
     if (!helper) {
@@ -69,7 +69,7 @@ router.get('/:id', async (req, res) => {
       .leftJoin(societies, eq(workHistory.societyId, societies.id))
       .leftJoin(users, eq(workHistory.residentId, users.id))
       .where(eq(workHistory.helperId, helperId))
-      .all();
+      ;
 
     return res.json({ success: true, helper, workHistory: history });
   } catch (error) {
@@ -100,7 +100,7 @@ router.get('/:id/work-history', requireRole('RESIDENT', 'ADMIN'), async (req, re
       .leftJoin(societies, eq(workHistory.societyId, societies.id))
       .leftJoin(users, eq(workHistory.residentId, users.id))
       .where(eq(workHistory.helperId, helperId))
-      .all();
+      ;
     return res.json({ success: true, workHistory: history });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });

@@ -17,27 +17,27 @@ router.get('/overview', async (req, res) => {
     const [guardCount] = db
       .select({ value: count() })
       .from(users)
-      .where(and(eq(users.role, 'GUARD'), eq(users.societyId, societyId))).all();
+      .where(and(eq(users.role, 'GUARD'), eq(users.societyId, societyId)));
 
     const [helperCount] = db
       .select({ value: count() })
       .from(users)
-      .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId))).all();
+      .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId)));
 
     const [residentCount] = db
       .select({ value: count() })
       .from(users)
-      .where(and(eq(users.role, 'RESIDENT'), eq(users.societyId, societyId))).all();
+      .where(and(eq(users.role, 'RESIDENT'), eq(users.societyId, societyId)));
 
     const [openAlerts] = db
       .select({ value: count() })
       .from(incidentsAndAlerts)
-      .where(and(eq(incidentsAndAlerts.societyId, societyId), eq(incidentsAndAlerts.status, 'OPEN'))).all();
+      .where(and(eq(incidentsAndAlerts.societyId, societyId), eq(incidentsAndAlerts.status, 'OPEN')));
 
     const [pendingApprovals] = db
       .select({ value: count() })
       .from(users)
-      .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING'))).all();
+      .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING')));
 
     const metrics = {
       guards: guardCount?.value ?? 0,
@@ -48,10 +48,10 @@ router.get('/overview', async (req, res) => {
     };
 
     // Get recent alerts for overview
-    const recentAlerts = db.select().from(incidentsAndAlerts)
+    const recentAlerts = await db.select().from(incidentsAndAlerts)
       .where(eq(incidentsAndAlerts.societyId, societyId))
       // SQLite limit and order by might require more complex setup, but basic works.
-      .all().reverse().slice(0, 5);
+      .reverse().slice(0, 5);
 
     return res.json({ success: true, ...metrics, recentAlerts });
   } catch (error) {
@@ -69,7 +69,7 @@ router.get('/pending-users', async (req, res) => {
     const pendingUsers = db
       .select()
       .from(users)
-      .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING'))).all();
+      .where(and(eq(users.societyId, societyId), eq(users.accountStatus, 'PENDING')));
     return res.json({ success: true, users: pendingUsers });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -82,7 +82,7 @@ router.get('/pending-users', async (req, res) => {
 router.patch('/users/:id/approve', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   try {
-    db.update(users).set({ accountStatus: 'APPROVED' }).where(eq(users.id, userId)).run();
+    await db.update(users).set({ accountStatus: 'APPROVED' }).where(eq(users.id, userId));
     return res.json({ success: true, message: 'User approved' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -95,7 +95,7 @@ router.patch('/users/:id/approve', async (req, res) => {
 router.patch('/users/:id/ban', async (req, res) => {
   const userId = parseInt(req.params.id, 10);
   try {
-    db.update(users).set({ accountStatus: 'BANNED' }).where(eq(users.id, userId)).run();
+    await db.update(users).set({ accountStatus: 'BANNED' }).where(eq(users.id, userId));
     return res.json({ success: true, message: 'User banned' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -112,7 +112,7 @@ router.get('/helpers', async (req, res) => {
     const helperList = db
       .select()
       .from(users)
-      .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId))).all();
+      .where(and(eq(users.role, 'HELPER'), eq(users.societyId, societyId)));
     return res.json({ success: true, helpers: helperList });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -126,7 +126,7 @@ router.get('/helpers', async (req, res) => {
 router.patch('/helpers/:id/revoke-card', async (req, res) => {
   const helperId = parseInt(req.params.id, 10);
   try {
-    db.update(users).set({ accountStatus: 'BANNED', qrCardId: null }).where(eq(users.id, helperId)).run();
+    await db.update(users).set({ accountStatus: 'BANNED', qrCardId: null }).where(eq(users.id, helperId));
     return res.json({ success: true, message: 'Helper card revoked and account suspended' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -143,7 +143,7 @@ router.get('/alerts', async (req, res) => {
     const alerts = db
       .select()
       .from(incidentsAndAlerts)
-      .where(eq(incidentsAndAlerts.societyId, societyId)).all();
+      .where(eq(incidentsAndAlerts.societyId, societyId));
     return res.json({ success: true, alerts });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });

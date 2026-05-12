@@ -11,14 +11,14 @@ const {
 } = require('drizzle-orm/mysql-core');
 
 const societies = mysqlTable('societies', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   address: text('address'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
 const users = mysqlTable('users', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   phoneNumber: varchar('phone_number', { length: 20 }).unique().notNull(),
   role: mysqlEnum('role', ['RESIDENT', 'GUARD', 'ADMIN', 'HELPER', 'DELIVERY', 'GUEST']).notNull().default('GUEST'),
   fullName: varchar('full_name', { length: 255 }),
@@ -32,7 +32,7 @@ const users = mysqlTable('users', {
 });
 
 const workHistory = mysqlTable('work_history', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   helperId: int('helper_id').references(() => users.id).notNull(),
   residentId: int('resident_id').references(() => users.id).notNull(),
   societyId: int('society_id').references(() => societies.id).notNull(),
@@ -44,7 +44,7 @@ const workHistory = mysqlTable('work_history', {
 });
 
 const visitorLogs = mysqlTable('visitor_logs', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   visitorId: int('visitor_id').references(() => users.id).notNull(),
   societyId: int('society_id').references(() => societies.id).notNull(),
   guardId: int('guard_id').references(() => users.id).notNull(),
@@ -56,7 +56,7 @@ const visitorLogs = mysqlTable('visitor_logs', {
 });
 
 const preApprovals = mysqlTable('pre_approvals', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   residentId: int('resident_id').references(() => users.id).notNull(),
   societyId: int('society_id').references(() => societies.id).notNull(),
   visitorPhone: varchar('visitor_phone', { length: 20 }).notNull(),
@@ -69,7 +69,7 @@ const preApprovals = mysqlTable('pre_approvals', {
 });
 
 const incidentsAndAlerts = mysqlTable('incidents_and_alerts', {
-  id: serial('id').primaryKey(),
+  id: int('id').autoincrement().primaryKey(),
   reportedById: int('reported_by_id').references(() => users.id).notNull(),
   societyId: int('society_id').references(() => societies.id).notNull(),
   targetUserId: int('target_user_id').references(() => users.id),

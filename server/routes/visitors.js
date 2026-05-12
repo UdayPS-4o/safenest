@@ -23,7 +23,7 @@ router.post('/pre-approve', requireRole('RESIDENT'), async (req, res) => {
   const qrCodeValue = uuidv4();
 
   try {
-    db.insert(preApprovals).values({
+    await db.insert(preApprovals).values({
       residentId: req.user.id,
       societyId: req.user.societyId,
       visitorName,
@@ -31,7 +31,7 @@ router.post('/pre-approve', requireRole('RESIDENT'), async (req, res) => {
       qrCodeValue,
       validFrom: new Date(validFrom).toISOString(),
       validUntil: new Date(validUntil).toISOString(),
-    }).run();
+    });
 
     return res.status(201).json({
       success: true,
@@ -59,7 +59,7 @@ router.get('/pre-approvals', requireRole('RESIDENT'), async (req, res) => {
           eq(preApprovals.residentId, req.user.id),
           eq(preApprovals.isUsed, false)
         )
-      ).all();
+      );
 
     // Filter out expired ones in JS or leave as is
     const validApprovals = activeApprovals.filter(a => new Date() <= new Date(a.validUntil));
@@ -78,9 +78,9 @@ router.get('/pre-approvals', requireRole('RESIDENT'), async (req, res) => {
 router.delete('/pre-approvals/:id', requireRole('RESIDENT'), async (req, res) => {
   const id = parseInt(req.params.id, 10);
   try {
-    db.delete(preApprovals)
+    await db.delete(preApprovals)
       .where(and(eq(preApprovals.id, id), eq(preApprovals.residentId, req.user.id)))
-      .run();
+      ;
     return res.json({ success: true, message: 'Pre-approval cancelled' });
   } catch (error) {
     console.error('[DeletePreApproval] Error:', error);
@@ -115,7 +115,7 @@ router.get('/in-society', requireRole('GUARD', 'ADMIN', 'RESIDENT'), async (req,
           eq(visitorLogs.societyId, societyId),
           eq(visitorLogs.entryStatus, 'INSIDE')
         )
-      ).all();
+      );
 
     return res.json({ success: true, count: insideVisitors.length, visitors: insideVisitors });
   } catch (error) {
@@ -140,17 +140,17 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
     let visitor = null;
 
     // Find or create guest user
-    const existingRows = db.select().from(users).where(eq(users.phoneNumber, visitorPhone)).all();
+    const existingRows = await db.select().from(users).where(eq(users.phoneNumber, visitorPhone));
     visitor = existingRows[0];
 
     if (!visitor) {
-      const info = db.insert(users).values({
+      const info = await db.insert(users).values({
         phoneNumber: visitorPhone,
         role: 'GUEST',
         accountStatus: 'APPROVED',
         societyId: req.user.societyId,
-      }).run();
-      const newRows = db.select().from(users).where(eq(users.id, info.lastInsertRowid)).all();
+      });
+      const newRows = await db.select().from(users).where(eq(users.id, info[0].insertId));
       visitor = newRows[0];
     }
 
@@ -160,7 +160,7 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
         .select()
         .from(preApprovals)
         .where(eq(preApprovals.qrCodeValue, qrCodeValue))
-        .all();
+        ;
 
       const approval = approvals[0];
       if (!approval || approval.isUsed || new Date() > new Date(approval.validUntil)) {
@@ -168,17 +168,17 @@ router.post('/log-entry', requireRole('GUARD'), async (req, res) => {
       }
 
       // Mark as used
-      db.update(preApprovals).set({ isUsed: true }).where(eq(preApprovals.id, approval.id)).run();
+      await db.update(preApprovals).set({ isUsed: true }).where(eq(preApprovals.id, approval.id));
     }
 
-    db.insert(visitorLogs).values({
+    await db.insert(visitorLogs).values({
       visitorId: visitor.id,
       societyId: req.user.societyId,
       guardId: req.user.id,
       destinationFlat,
       verificationMethod,
       entryStatus: 'INSIDE',
-    }).run();
+    });
 
     return res.status(201).json({
       success: true,
@@ -207,7 +207,7 @@ router.patch('/log-exit/:logId', requireRole('GUARD'), async (req, res) => {
     db
       .update(visitorLogs)
       .set({ exitTime: new Date().toISOString(), entryStatus: 'EXITED' })
-      .where(eq(visitorLogs.id, logId)).run();
+      .where(eq(visitorLogs.id, logId));
     return res.json({ success: true, message: 'Exit logged' });
   } catch (error) {
     return res.status(500).json({ success: false, message: 'Internal server error' });
@@ -230,7 +230,7 @@ router.post('/verify-qr', requireRole('GUARD'), async (req, res) => {
       .select()
       .from(preApprovals)
       .where(eq(preApprovals.qrCodeValue, qrCodeValue))
-      .all();
+      ;
     const result = rows[0];
 
     if (!result) {

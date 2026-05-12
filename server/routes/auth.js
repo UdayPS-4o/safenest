@@ -67,18 +67,18 @@ router.post('/verify-otp', async (req, res) => {
     const SECRET_KEY = process.env.JWT_SECRET || 'your_super_secret_key_123';
 
     // Check if user exists in DB
-    const existingUsers = db.select().from(users).where(eq(users.phoneNumber, phoneNumber)).all();
+    const existingUsers = await db.select().from(users).where(eq(users.phoneNumber, phoneNumber));
     let user = existingUsers[0];
 
     if (!user) {
       // New user — create as GUEST pending admin approval
-      const info = db.insert(users).values({
+      const info = await db.insert(users).values({
         phoneNumber,
         role: 'GUEST',
         accountStatus: 'PENDING',
-      }).run();
+      });
       
-      const newUserRows = db.select().from(users).where(eq(users.id, info.lastInsertRowid)).all();
+      const newUserRows = await db.select().from(users).where(eq(users.id, info[0].insertId));
       user = newUserRows[0];
     }
 
